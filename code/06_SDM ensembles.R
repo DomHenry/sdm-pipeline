@@ -191,9 +191,6 @@ ggsave(glue('{str_replace(sppselect," ",".")}/diagnostics/variable_importance.pn
 
 # Model getter functions --------------------------------------------------
 
-# TODO Clean up this code and remove all these bits that don't do anything. Keep them in a separate file as a reference
-
-get_formal_data(biomod_out) # All data from "BIOMOD.formated.data" object
 get_formal_data(biomod_out, subinfo = "MinMax")
 get_formal_data(biomod_out, subinfo = "resp.var")
 get_formal_data(biomod_out, subinfo = "expl.var.names")
