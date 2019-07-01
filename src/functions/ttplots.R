@@ -6,8 +6,8 @@ ttplots <- function(block_data, fold_name, fold_num, sb_id, endcol, plot_base){
     mutate(fold_ref = bd$foldID) %>% 
     bind_cols(as_tibble(bd$biomodTable)) %>% 
     mutate(traintest = ifelse(Species == 1,"Pr","Ab")) %>% 
-    mutate_at(vars(RUN1:!!endcol), funs(ifelse((.) == TRUE, "train", "test"))) %>% 
-    mutate_at(vars(RUN1:!!endcol), funs(str_c((.),traintest)))
+    mutate_at(vars(RUN1:!!endcol), list(~ifelse((.) == TRUE, "train", "test"))) %>% 
+    mutate_at(vars(RUN1:!!endcol), list(~str_c((.),traintest)))
   
   train_data <- fold_sf %>% 
     filter(fold_ref != fold_num) %>% 
