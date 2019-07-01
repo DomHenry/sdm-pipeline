@@ -12,7 +12,7 @@ library(glue)
 
 # Import data -------------------------------------------------------------
 load("data output/amph_data_clean.RData")
-walk(dir("code/functions/", full.names = TRUE),
+walk(dir("src/functions/", full.names = TRUE),
         source)
 
 # Rmarkdown report information --------------------------------------------
@@ -36,6 +36,15 @@ print(paste0("Most recent record: ", max(amph$date, na.rm = TRUE)))
 spp <- spp[spp %in% unique(amph$scientificname)]
 
 # Plot :: Decadal occurrence summary ---------------------------------------
+
+## Create output folder
+temp_plot_dir <- glue("data output/temporal occurrence plots")
+if(dir.exists(temp_plot_dir)) {
+  print("Folder exists")
+} else {
+  dir.create(temp_plot_dir)
+  print("Folder created")
+}
 
 ## Theme
 ptheme <- theme(axis.text.x = element_text(angle = 90, size = 16),
@@ -75,7 +84,7 @@ p2 <- amph %>%
   coord_cartesian(ylim = c(0,40))+
   ptheme
 
-pdf("data output/temporal occurrence plots/fig1 - prop_per_decade.pdf", width = 16, height = 9)
+pdf("data output/temporal occurrence plots/occ_proportion_per_decade.pdf", width = 16, height = 9)
 grid.arrange(grobs = list(p1,p2), ncol = 2) # Also see ggarrange
 dev.off()
 
@@ -84,7 +93,7 @@ dev.off()
 ## Most of these records are Western Leopard Toad
 cat("Proportion of occurrence records of made up of Sclerophrys pantherinus: ",length(which(amph$scientificname == "Sclerophrys pantherinus"))/nrow(amph)*100)
 
-pdf("data output/temporal occurrence plots/fig2 - all_occ_records.pdf", width = 14, height = 9)
+pdf("data output/temporal occurrence plots/all_occ_records.pdf", width = 14, height = 9)
 p1 <- occ_date_plot(amph,dmy("01-01-1897"),"All records")
 p2 <- occ_date_plot(amph,dmy("01-01-1930"), "1930 onwards")
 p3 <- occ_date_plot(amph,dmy("01-01-1950"), "1950 onwards")
@@ -92,7 +101,7 @@ p4 <- occ_date_plot(amph,dmy("01-01-1980"), "1980 onwards")
 grid.arrange(grobs = list(p1,p2,p3,p4), ncol = 2) 
 dev.off()
 
-pdf("data output/temporal occurrence plots/fig3 - all_occ_records_excl_WLT.pdf",width = 14, height = 9)
+pdf("data output/temporal occurrence plots/all_occ_records_excl_WLT.pdf",width = 14, height = 9)
 p1 <- occ_date_plot(amph %>% filter(!scientificname %in% "Sclerophrys pantherinus"),dmy("01-01-1897"),"All records")
 p2 <- occ_date_plot(amph %>% filter(!scientificname %in% "Sclerophrys pantherinus"),dmy("01-01-1930"), "1930 onwards")
 p3 <- occ_date_plot(amph %>% filter(!scientificname %in% "Sclerophrys pantherinus"),dmy("01-01-1950"), "1950 onwards")
@@ -100,7 +109,7 @@ p4 <- occ_date_plot(amph %>% filter(!scientificname %in% "Sclerophrys pantherinu
 grid.arrange(grobs = list(p1,p2,p3,p4), ncol = 2)
 dev.off()
 
-pdf("data output/temporal occurrence plots/fig4 - all_occ_records_high_WLT.pdf", width = 14, height = 9)
+pdf("data output/temporal occurrence plots/all_occ_records_high_WLT.pdf", width = 14, height = 9)
 p1 <- occ_date_plot_wlt(amph,dmy("01-01-1897"),"All records")
 p2 <- occ_date_plot_wlt(amph,dmy("01-01-1930"), "1930 onwards")
 p3 <- occ_date_plot_wlt(amph,dmy("01-01-1950"), "1950 onwards")
@@ -109,14 +118,14 @@ grid.arrange(grobs = list(p1,p2,p3,p4), ncol = 2)
 dev.off()
 
 # Plot :: Species occurrence records ---------------------------------------
-pdf("data output/temporal occurrence plots/fig5 - spp_1970.pdf", width = 16, height = 9)
+pdf("data output/temporal occurrence plots/occ_spp_1970.pdf", width = 16, height = 9)
 spp_len <- c(1:length(spp))
 plists <- split(spp_len, ceiling(seq_along(spp_len)/6))
 pmap(list(list(amph),plists,list(ymd("1970-01-01"))),
      occ_date_high_plot)
 dev.off()
 
-pdf("data output/temporal occurrence plots/fig6 - spp_1940.pdf", width = 16, height = 9)
+pdf("data output/temporal occurrence plots/occ_spp_1940.pdf", width = 16, height = 9)
 spp_len <- c(1:length(spp))
 plists <- split(spp_len, ceiling(seq_along(spp_len)/6))
 pmap(list(list(amph),plists,list(ymd("1940-01-01"))),
@@ -139,7 +148,7 @@ amph %>%
         axis.text.y = element_text(size = 18),
         strip.text = element_text(size = 18))+
   coord_cartesian(ylim = c(0,800))
-ggsave("data output/temporal occurrence plots/fig7 - Sclerophrys pantherinus.pdf", width = 16, height = 9)
+ggsave("data output/temporal occurrence plots/Sclerophrys pantherinus.pdf", width = 16, height = 9)
 
 
 # Plot :: Single species PNGs --------------------------------------------
