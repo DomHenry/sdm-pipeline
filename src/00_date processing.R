@@ -8,9 +8,6 @@
 ## other date that contains errors in day, month or year. Also write csvs
 ## for remaing 3 date combinations.
 
-## TO DO:
-## Add functions to check whether points fall outside expert polygons
-
 library(tidyverse)
 library(lubridate)
 library(gghighlight)
@@ -21,11 +18,10 @@ library(viridis)
 library(gt)
 library(glue)
 
-walk(dir("code/functions/", full.names = TRUE),
+walk(dir("src/functions/", full.names = TRUE),
     source)
 
 # Import data -------------------------------------------------------------
-source("code/00_analysis functions.R")
 
 ## Red-listed endemic species
 rl <- low_rm_space(read_csv("data input/vertebrate_threatend_endemic.csv")) %>% 

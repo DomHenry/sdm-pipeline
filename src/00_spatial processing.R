@@ -74,7 +74,6 @@ amphsf <- amph %>% ## Records with no location errors, not QDS scale, and are wi
   st_crop(st_bbox(sa)) 
 
 # Write a summary that shows QDS as a proportion of total errors ----------
-
 amph_all_summary <- amph %>% 
   filter(!(is.na(decimallatitude) | is.na(decimallongitude) | 
              decimallatitude == 0 | decimallongitude == 0 |
@@ -109,7 +108,6 @@ spatial_summary <- amph_all_summary %>%
 
 write_csv(spatial_summary,"data output/occurence records spatial/Amphibian_occ_records_summary.csv")
 
-
 # Summary table gt --------------------------------------------------------
 spatial_gt <- spatial_summary %>% 
   gt() %>% 
@@ -130,11 +128,9 @@ spatial_gt <- spatial_gt %>% # Need to do this in two steps for some reason
   tab_style(style = cells_styles(text_align =  "center"),
             locations = cells_data(columns = vars(All_record_count,GPS_record_count,
                                                   QDS_record_count,prop_qds)))
-
 spatial_gt
 
 # Expert polygon check ----------------------------------------------------
-
 
 ## Rename files and remove underscore between genus and species name
 polyfiles <- dir("data input/Amphibian Interpreted Distributions/", full.names = T)
@@ -145,7 +141,7 @@ file.rename(from = polyfiles, to = new_polyfiles)
 polynames <- dir("data input/Amphibian Interpreted Distributions/", pattern = ".shp")
 polylist <- dir("data input/Amphibian Interpreted Distributions/", pattern = ".shp" ,full.names = T)
 
-source("code/functions/check_occ_poly.R")
+source("src/functions/check_occ_poly.R")
 polyresults <- map(spp,check_occ_poly)
 
 ## Either species has no records or there is no expert shapefile
