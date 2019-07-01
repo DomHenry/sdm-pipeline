@@ -18,6 +18,15 @@ library(glue)
 query <- read_xlsx("data input/SDM_query.xlsx") %>% 
   print
 
+## Create output folder
+sdm_pro_dir <- glue("data output/sdm data processing")
+if(dir.exists(sdm_pro_dir)) {
+  print("Folder exists")
+} else {
+  dir.create(sdm_pro_dir)
+  print("Folder created")
+}
+
 # Import species data -----------------------------------------------------
 load("data output/amph_data_clean.RData")
 
@@ -242,10 +251,6 @@ extractfiles <- function(x) {
 }
 
 envstack <- stack(map(envlayers,extractfiles))
-
-
-# TODO - NEED TO PROCESS ASPECT LAYERS (WRONG RESOLUTION)
-# stack(map(envlayers[7],extractfiles))
 
 ## Shorten the names of the Envirem variables
 names(envstack)[which(str_detect(names(envstack),"current_2.5arcmin"))] <- str_replace(names(envstack)[which(str_detect(names(envstack),"current_2.5arcmin"))],"current_2.5arcmin_","")
