@@ -1,0 +1,286 @@
+---
+title: "SDM report"
+author: "Dominic Henry"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+---
+
+<!-- ctrl+alt+c to make chunk of highlighted code -->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE,warning=FALSE,message=FALSE)
+```
+
+```{r}
+# Notes about PDFS
+
+# PDF images knitted in HTML format aren't shown in the RStudio viewer but come up as embedded pdfs in chrome (which isn't ideal).
+# What is cool is that you can zoom in on the PDF image but it doesn't look great. It may be useful in some cases to do that though.
+# Also cool is that you can download the pdf image directly from the html document.
+# For now thought it probably makes sense to write PNG files for graphic outputs.
+
+## See this post to understand the pdf issue
+# https://stackoverflow.com/questions/43549930/pdf-figures-not-shown-in-html-files-produced-by-rmarkdown-when-open-with-firefox
+# https://stackoverflow.com/questions/51179905/include-images-for-pdf-and-html-format
+
+
+```
+
+
+```{r}
+library(tidyverse)
+library(gt)
+library(here)
+library(glue)
+library(readxl)
+
+query <- read_xlsx(here("data input/SDM_query.xlsx"))
+sppselect <- query$Value[which(query$Input == "Species")]
+
+auc_table <- read_csv(here(glue("data output/sdm maxent results/{sppselect}/diagnostics/thresholds & auc.csv")))
+topmod <- auc_table$model[[1]]
+
+sppselect_em <- str_replace(sppselect, ' ', '.')
+```
+
+# Introduction
+
+## Threat status summary
+
+These maps show the occurrence records of species within each red-list category (red) against all occurrence points (grey).
+
+```{r}
+# use to change size -- out.width = "700px"
+
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/fig6 - threat_status_facet.png")))
+
+```
+
+## User query 
+
+This table details all the user inputs that were used to run the species distribution models.
+
+```{r}
+
+query %>% 
+  gt() %>% 
+  tab_header(
+    title = md("**SDM user query inputs**"),
+    subtitle = md(glue("*Compiled on {Sys.Date()}*"))) %>% 
+  tab_source_note(source_note = md("*Analysis used records from database provided by John Measey*")) %>% 
+  cols_label(Input = md("**Parameter**"),
+             Value = md("**Value**")) 
+
+```
+
+## Occurrence records - temporal summary
+
+```{r}
+
+date_sum_table <- read_csv(here("data output/occurence record dates/occ_records_date_summary.csv")) %>% 
+  filter(scientificname %in% sppselect) %>% 
+  gt() %>% 
+  tab_header(
+    title = md("**Breakdown of occurence records and date errors**")) %>% 
+    tab_source_note(source_note = md("*Analysis based on database provided by John Measey*")) %>% 
+  cols_move_to_start(columns = vars(scientificname,rls,total_records,with_date,no_date, prop_no_date)) %>% 
+  cols_label(scientificname = md("**Species**"),
+             rls = md("**Red-list status**"),
+             total_records = md("**Total records**"),
+             with_date = md("**Valid date**"),
+             prop_no_date = md("**No date information (%)**"),
+             no_date = md("**No date information**")) 
+
+
+date_sum_table <- date_sum_table %>% # Need to do this in two steps for some reason
+  tab_style(style = cells_styles(text_style = "italic"),
+            locations = cells_data(columns = vars(scientificname))) %>% 
+  tab_style(style = cells_styles(text_align =  "center"),
+            locations = cells_data(columns = vars(total_records,with_date,no_date,prop_no_date)))
+
+date_sum_table
+
+```
+
+
+##  Occurrence records - spatial summary
+
+```{r}
+
+spatial_gt <- read_csv(here("data output/occurence records spatial/Amphibian_occ_records_summary.csv")) %>% 
+  filter(scientificname %in% sppselect) %>% 
+  gt() %>% 
+  tab_header(
+    title = md("**Breakdown of spatial occurence records**")) %>% 
+  tab_source_note(source_note = md("*Analysis based on database provided by John Measey*")) %>% 
+  cols_label(scientificname = md("**Species**"),
+             rls = md("**Red-list status**"),
+             All_record_count  = md("**Total occurence records**"),
+             GPS_record_count  = md("**Valid spatial location (GPS)**"),
+             QDS_record_count  = md("**QDS records**"),
+             prop_qds = md("**Proportion QDS (%)**")) 
+
+spatial_gt <- spatial_gt %>% # Need to do this in two steps for some reason
+  tab_style(style = cells_styles(text_style = "italic"),
+            locations = cells_data(columns = vars(scientificname))) %>% 
+  tab_style(style = cells_styles(text_align =  "center"),
+            locations = cells_data(columns = vars(All_record_count,GPS_record_count,
+                                                  QDS_record_count,prop_qds)))
+
+spatial_gt
+
+```
+
+## Temporal frequency
+
+This plot shows the temporal distribution of records of the focal species (red) plotted against the distribution of all amphibian records (grey).
+
+```{r}
+
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/temp_freq_{sppselect}.png")))
+
+```
+
+## Spatial distribution 
+
+```{r}
+
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/national_{sppselect}.png")))
+
+```
+
+## Spatial distribution - inset
+
+```{r}
+
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/inset_{sppselect}.png")))
+
+```
+
+## Spatial distribution - inset - decadal
+
+These explore the spatio-temporal patterns of occurrence data by plotting the decade in which each record occurs
+
+```{r}
+
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/decade_inset_{sppselect}.png")))
+
+```
+
+# SDM inputs {.tabset}
+
+These plots show the area over which we predict the species’ distribution and the number of background points used in the modelling.
+
+```{r}
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/fig1.png")))
+```
+
+# Cross validation {.tabset}
+
+Plots showing test and train samples
+
+## Maps
+
+```{r}
+ # glue("data output/sdm data processing/{sppselect}/blockCV_results/tt_plots_{foldtable$fold_dir}.png")
+foldtable <- read_csv(here(glue("data output/rmarkdown documents/{sppselect}/foldtable.csv")))
+
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/tt_plots_{foldtable$fold_dir}.png")))
+
+
+```
+
+
+# Ensemble maps {.tabset}
+
+## Ensemble mean
+
+```{r}
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/{sppselect_em}_EMmeanByROC.png")))
+```
+
+## Ensemble commitee averaging
+
+```{r}
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/{sppselect_em}_EMcaByROC.png")))
+
+```
+
+## CV (uncertainty)
+
+```{r out.width = "700px", out.height= "700px"}
+
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/{sppselect_em}_EMcvByROC.png")))
+```
+
+## Diagnostics
+
+```{r}
+# use to change size -- out.width = "700px"
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/avg_model_scores1.png")))
+```
+
+## Cross validation fold tables
+
+```{r}
+sb <- read_csv(here(glue("data output/rmarkdown documents/{sppselect}/foldtable.csv"))) %>% 
+  select(-type) %>% 
+  gt() %>% 
+  tab_header(title = md("**Cross-validation blocking**"))
+sb
+```
+  
+
+## Variable importance
+
+```{r}
+knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/variable_importance.png")))
+```
+
+# Maxent {.tabset}
+
+## Predictive map
+
+```{r}
+fname <- dir(here(glue("data output/rmarkdown documents/{sppselect}")), pattern = "range")
+knitr::include_graphics(fname)
+
+```
+
+## Diagnostics
+
+```{r}
+fname <- dir(here(glue("data output/rmarkdown documents/{sppselect}")), pattern = "auc_plot")
+knitr::include_graphics(fname)
+```
+
+# Appendix - variable codes {.tabset}
+
+
+## Bioclim
+```{r}
+bio <- read_csv(here("data input/bioclim_codes.csv")) %>% 
+  gt() %>% 
+  tab_header(title = md("**Guide to Bioclim variable codes**")) %>% 
+  cols_label(code = md("**Code**"),
+             description = md("**Description**")) 
+
+bio
+```
+
+## Envirem
+```{r}
+env <- read_csv(here("data input/envirem_codes.csv")) %>% 
+  gt() %>% 
+  tab_header(title = md("**Guide to ENVIREM variable codes**")) %>% 
+  cols_label(code = md("**Code**"),
+             description = md("**Description**"),
+             units = md("**Units**")) 
+
+env
+```
+
