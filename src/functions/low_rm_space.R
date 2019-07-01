@@ -2,5 +2,5 @@
 low_rm_space <- function(x){
   x %>% 
     select_all(tolower) %>% 
-    select_all(funs(str_replace_all(.," ","_")))
+    select_all(list(~str_replace_all(.," ","_")))
 }
