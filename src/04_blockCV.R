@@ -23,9 +23,6 @@ library(blockCV)
 ## Spatial - well spread out occurence data across prediction area
 ## Environmental - also fairly well spread out with
 
-## However, create blocking data for each method and store it in results
-## The data can be processed subsequently -for instance I can remove all folds that have very few testing presence points
-
 ## For spatial blocking: if median spatial auto correlation distance is large and results in fewer than 5 blocks then 
 ## I need to re-run with a different (smaller) distance parameter to create a grid with at least 5 blocks. I could try do this by measuring the distance across the raster data and see how many blocks can fit in
 
@@ -217,7 +214,7 @@ sb_list[[1]]$plots
 #              speciesData = PB_data)
 
 # Spatial blocking :: plots -----------------------------------------------
-source("code/functions/ttplots.R")
+source("src/functions/ttplots.R")
 
 # First SB
 block_data <- list(sb_list[[1]])
@@ -278,8 +275,6 @@ eb[["records"]] %>%
   select(foldID, type, everything()) %>% 
   write_csv(glue("data output/sdm data processing/{sppselect}/blockCV_results/eb_fold_table.csv"))
 
-source("code/functions/ttplots.R")
-
 block_data <- list(eb)
 fold_name <- list(quo(RUN1),quo(RUN2),quo(RUN3),quo(RUN4),quo(RUN5))
 fold_num <- as.list(c(1:5))
@@ -311,12 +306,11 @@ bf[["records"]] %>%
 
 # Write workspace ---------------------------------------------------------
 save(list = c("occ_points","bck_points","envstack",
-              "eb","sb","bf","sac","sb_list",
+              "eb","bf","sac","sb_list",
               "PB_data"), 
      file = glue("data output/sdm data processing/{sppselect}/sdm_input_data.RData"))
 
 # Future developments -----------------------------------------------------
 
-# TODO Create a markdown document of all blocking options to make selections?? Aid with selecting appropriate cv folds. Will need to create PNG files instead of PDFs for graphics. Alternative is to run all maxent models on all folds (first remove folds that don't have any testing presences) and see from there.
 # TODO Carry on exploring the blockCV vignette and how they calculate AUC for different methods
 
