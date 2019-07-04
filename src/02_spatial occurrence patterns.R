@@ -17,7 +17,7 @@ library(glue)
 
 # Import data -------------------------------------------------------------
 load("data output/amph_data_clean.RData")
-map(dir("code/functions/",full.names = TRUE),
+map(dir("src/functions/",full.names = TRUE),
     source)
 
 sa <- st_read("data input/PR_SA.shp") # sa <- st_read("data input/southern_africa.shp")
@@ -38,6 +38,7 @@ vec <- 1:length(spp)
 sppgrp <- 4
 
 # TODO Rename these figures with more informative names (instead of fig 1 etc)
+dir.create(glue::glue("data output/spatial occurrence plots"))
 
 pdf("data output/spatial occurrence plots/fig 1 - species_groups_map.pdf",width = 16, height = 9)
 map(split(vec, ceiling(seq_along(vec)/sppgrp)),
@@ -57,7 +58,6 @@ dev.off()
 map2(spp_len,"png",
      safely(plot_single_spp))
 
-
 # Plot :: Species distribution and inset ----------------------------------
 pdf("data output/spatial occurrence plots/fig3 - spp_range_facet.pdf",width = 16, height = 9)
 map2(spp_len,"pdf",
@@ -67,7 +67,6 @@ dev.off()
 ## Plot single PNGs
 map2(spp_len,"png",
      safely(spp_range_inset))
-
 
 # Plot :: Decadal plot separate species -----------------------------------
 amphsf <- amphsf %>% 
@@ -170,6 +169,3 @@ ggsave("data output/spatial occurrence plots/fig6 - threat_status_facet.png",
        width = 16, 
        height = 9)
 # END ---------------------------------------------------------------------
-
-
-
