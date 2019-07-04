@@ -246,15 +246,14 @@ knitr::include_graphics(here(glue("data output/rmarkdown documents/{sppselect}/v
 ## Predictive map
 
 ```{r}
-fname <- dir(here(glue("data output/rmarkdown documents/{sppselect}")), pattern = "range")
+fname <- dir(here(glue("data output/rmarkdown documents/{sppselect}")), pattern = "range", full.names = TRUE)
 knitr::include_graphics(fname)
-
 ```
 
 ## Diagnostics
 
 ```{r}
-fname <- dir(here(glue("data output/rmarkdown documents/{sppselect}")), pattern = "auc_plot")
+fname <- dir(here(glue("data output/rmarkdown documents/{sppselect}")), pattern = "auc_plot",full.names = TRUE)
 knitr::include_graphics(fname)
 ```
 
