@@ -36,8 +36,9 @@ query <- read_xlsx("data input/SDM_query.xlsx") %>%
 
 sppselect <- query$Value[which(query$Input == "Species")]
 
-# Create species folder ---------------------------------------------------
+dir.create(glue("data output/rmarkdown documents"))
 
+# Create species folder ---------------------------------------------------
 rmark_dir <- glue("data output/rmarkdown documents/{sppselect}")
 
 if(dir.exists(rmark_dir)) {
@@ -84,20 +85,20 @@ file.copy(copyfrom, rmark_dir, recursive=TRUE)
 
 # Import ensemble diagnostics -------------------------------------------
 copyfrom <- c(
-  glue("data output/sdm ensemble results/{str_replace(sppselect, ' ', '.')}/diagnostics/avg_model_scores1.png"),
-  glue("data output/sdm ensemble results/{str_replace(sppselect, ' ', '.')}/diagnostics/variable_importance.png")
+  glue("data output/sdm ensemble results/{sppselect}/diagnostics/avg_model_scores1.png"),
+  glue("data output/sdm ensemble results/{sppselect}/diagnostics/variable_importance.png")
   )
 
 file.copy(copyfrom,rmark_dir, recursive=TRUE)
 
 # Import ensemble maps ----------------------------------------------------
 
-## TODO Perhaps write a query to extract specific maps
+## TODO Perhaps write a query to extract specific maps?
 
 copyfrom <- c(
-    glue("data output/sdm ensemble results/{str_replace(sppselect, ' ', '.')}/ensemble_maps/{str_replace(sppselect, ' ', '.')}_EMcvByROC.png"),
-    glue("data output/sdm ensemble results/{str_replace(sppselect, ' ', '.')}/ensemble_maps/{str_replace(sppselect, ' ', '.')}_EMmeanByROC.png"),
-    glue("data output/sdm ensemble results/{str_replace(sppselect, ' ', '.')}/ensemble_maps/{str_replace(sppselect, ' ', '.')}_EMcaByROC.png")
+    glue("data output/sdm ensemble results/{sppselect}/ensemble_maps/{str_replace(sppselect, ' ', '.')}_EMcvByROC.png"),
+    glue("data output/sdm ensemble results/{sppselect}/ensemble_maps/{str_replace(sppselect, ' ', '.')}_EMmeanByROC.png"),
+    glue("data output/sdm ensemble results/{sppselect}/ensemble_maps/{str_replace(sppselect, ' ', '.')}_EMcaByROC.png")
 )
 
 file.copy(copyfrom,rmark_dir, recursive=TRUE)
@@ -106,17 +107,11 @@ file.copy(copyfrom,rmark_dir, recursive=TRUE)
 foldtable
 write_csv(foldtable, glue("{rmark_dir}/foldtable.csv"))
 
-# copyfrom <- c(glue("data output/sdm data processing/{sppselect}/blockCV_results/eb_fold_table.csv"),
-#               glue("data output/sdm data processing/{sppselect}/blockCV_results/sb_fold_table.csv"))
-# 
-# file.copy(copyfrom,rmark_dir, recursive=TRUE)
-
 # Import rmarkdown template into folder -----------------------------------
-copyfrom <- c("code/SDM report.Rmd")
+copyfrom <- c("src/SDM report.Rmd")
 file.copy(copyfrom,rmark_dir, recursive=TRUE)
 
 # Import blockCV plots ----------------------------------------------------
 foldtable$fold_dir
 copyfrom <- glue("data output/sdm data processing/{sppselect}/blockCV_results/tt_plots_{foldtable$fold_dir}.png")
 file.copy(copyfrom,rmark_dir, recursive=TRUE)
-
