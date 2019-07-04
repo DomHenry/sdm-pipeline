@@ -1,6 +1,7 @@
 library(tidyverse)
 library(readxl)
 library(glue)
+
 # Import query details ----------------------------------------------------
 query <- read_xlsx("data input/SDM_query.xlsx") %>% 
   print
