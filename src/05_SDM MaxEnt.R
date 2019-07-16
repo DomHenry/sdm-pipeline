@@ -132,6 +132,7 @@ for(i in 1:nrow(foldtable)){
       fold_ref[[i]] <- sb_list$sb_ran$foldID
     }
   }
+
 fold_name <- as.list(str_replace(foldtable$foldID,"fold","RUN"))
 fold_num <- as.list(as.numeric(str_replace(foldtable$foldID,"fold","")))
 fold_dir <- folder_dir
@@ -149,9 +150,7 @@ maxlist <- pmap(
 # fold_num <- fold_num[[test]]
 # fold_dir <- folder_dir[[test]]
 
-
 # Testing the model -------------------------------------------------------
-
 eval_list <- pmap(.l = list(fold_data, fold_ref, fold_name, fold_num, maxlist),
                   .f = maxent_eval_models
                   )
@@ -172,7 +171,8 @@ dir.create(diag_dir)
   # sensitivty: fixed (specified) sensitivity
 foldtable
 
-map_df(eval_list, threshold) %>% 
+map_df(eval_list, 
+       threshold) %>% 
   mutate(model = foldtable$fold_dir) %>% 
   select(model, everything()) %>% 
   mutate(auc = map_dbl(eval_list, "auc"),
