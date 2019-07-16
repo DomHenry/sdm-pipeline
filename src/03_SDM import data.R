@@ -182,10 +182,11 @@ occ_bbox <- st_make_grid(occ_buffer, n = 1) # Make a grid with one cell
 ## Create output folder (if neccessary)
 sppselect <- query$Value[which(query$Input == "Species")]
 
-if(dir.exists(paste0("data output/sdm data processing/",sppselect))) {
+if(dir.exists(glue("data output/sdm data processing/{sppselect}"))) {
   print("Folder exists")
   } else {
-    dir.create(paste0("data output/sdm data processing/",sppselect))
+    print("Folder created")
+    dir.create(glue("data output/sdm data processing/{sppselect}"))
     }
 
 p1 <- ggplot() +
@@ -194,7 +195,7 @@ p1 <- ggplot() +
   geom_sf(data = occ_bbox, fill = NA, col = "dodgerblue", size = 1.3) +
   theme_bw()+
   theme(legend.text = element_text(size = 14))+
-  ggtitle(glue::glue("{query$Value[which(query$Input == 'Species')]} - {nrow(occ_points)} occurence points"))
+  ggtitle(glue("{query$Value[which(query$Input == 'Species')]} - {nrow(occ_points)} occurence points"))
 
 p2 <- ggplot() +
   geom_sf(data = za, fill = alpha("grey",0.5), size = 1.0)+
@@ -216,7 +217,7 @@ p3 <- ggplot() +
   theme_bw()+
   theme(panel.border = element_rect(colour = "dodgerblue", fill=NA, size=1.6))+
   theme(legend.text = element_text(size = 14))+
-  ggtitle(glue::glue("{query$Value[which(query$Input == 'Species')]} - {buffval/1000}km buffer"))
+  ggtitle(glue("{query$Value[which(query$Input == 'Species')]} - {buffval/1000}km buffer"))
 
 p4 <- ggplot() +
   geom_sf(data = za, fill = alpha("grey",0.5), size = 1.0)+
@@ -225,7 +226,7 @@ p4 <- ggplot() +
            ylim = c(st_bbox(occ_bbox)$ymin,st_bbox(occ_bbox)$ymax))+
   theme_bw()+
   theme(panel.border = element_rect(colour = "dodgerblue", fill=NA, size=1.6))+
-  ggtitle(glue::glue("{query$Value[which(query$Input == 'Species')]} - {nrow(bck_points)} background points"))
+  ggtitle(glue("{query$Value[which(query$Input == 'Species')]} - {nrow(bck_points)} background points"))
 
 pdf(glue("data output/sdm data processing/{sppselect}/fig1.pdf"), width = 16, height = 9)
 grid.arrange(grobs = list(p1,p2,p3,p4), ncol = 2) # Also see ggarrange
@@ -291,7 +292,7 @@ if (geo_proj == "Yes") {
 # Collinearity of environemental predictors -------------------------------
 ifelse(ncell(envstack) < 12000, bg_points <- ncell(envstack)/2, bg_points <- 10000)
 
-pdf(paste0("data output/sdm data processing/",sppselect,"/fig2.pdf"), width = 12, height = 9)
+pdf(glue("data output/sdm data processing/{sppselect}/fig2.pdf"), width = 12, height = 9)
 non_collinear_vars <- virtualspecies::removeCollinearity(envstack, 
                                                          multicollinearity.cutoff = 0.7, 
                                                          select.variables = TRUE, 
@@ -306,10 +307,10 @@ envstack <- raster::subset(envstack, subset = non_collinear_vars)
 # Double check collinearity -----------------------------------------------
 cormatrix <- raster::layerStats(envstack, "pearson", na.rm = TRUE)
 
-cormatrix <- as_data_frame(cormatrix$`pearson correlation coefficient`) %>% 
+cormatrix <- as_tibble(cormatrix$`pearson correlation coefficient`) %>% 
   mutate(var = colnames(cormatrix$`pearson correlation coefficient`)) %>% 
   select(var, everything()) %>% 
-  write_csv(paste0("data output/sdm data processing/",sppselect,"/raster_corr_matrix.csv"))
+  write_csv(glue("data output/sdm data processing/{sppselect}/raster_corr_matrix.csv"))
 
 ## Read details and check whether we need to remove more variables
 usdm::vif(envstack)
@@ -321,11 +322,11 @@ enlen <- 1:nlayers(envstack)
 plists <- split(enlen, ceiling(seq_along(enlen)/4))
 plotras <- function(x){plot(envstack[[x]])}
 
-pdf(paste0("data output/sdm data processing/",sppselect,"/fig3.pdf"), width = 16, height = 9)
+pdf(glue("data output/sdm data processing/{sppselect}/fig3.pdf"), width = 16, height = 9)
 map(plists, plotras)
 dev.off()
 
 # Write workspace ---------------------------------------------------------
 save(list = c("occ_points","bck_points","envstack"), 
-     file = paste0("data output/sdm data processing/",sppselect,"/sdm_input_data.RData"))
+     file = glue("data output/sdm data processing/{sppselect}/sdm_input_data.RData"))
 

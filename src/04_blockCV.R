@@ -17,8 +17,6 @@ library(tictoc)
 library(glue)
 library(blockCV)
 
-## Look at summary plots and then decide on a first preference of which type of blocking to do
- 
 ## Checkboard - 2 folds for data that are highly clustered
 ## Spatial - well spread out occurence data across prediction area
 ## Environmental - also fairly well spread out with
@@ -32,7 +30,7 @@ query <- read_xlsx("data input/SDM_query.xlsx") %>%
 
 # Import species and environmental data -----------------------------------
 sppselect <- query$Value[which(query$Input == "Species")]
-load(paste0("data output/sdm data processing/",sppselect,"/sdm_input_data.RData"))
+load(glue("data output/sdm data processing/{sppselect}/sdm_input_data.RData"))
 
 # Create PB object for blockCV functions ----------------------------------
 PB_data <- occ_points %>% 
@@ -51,6 +49,7 @@ block_dir <- glue("data output/sdm data processing/{sppselect}/blockCV_results")
 if(dir.exists(block_dir)) {
   print("Folder exists")
 } else {
+  print("Folder created")
   dir.create(block_dir)
 }
 
