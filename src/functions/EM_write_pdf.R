@@ -1,11 +1,11 @@
 EM_write_pdf <- function(x, output){
   
-  ras <- raster(dir(paste0(str_replace(sppselect," ","."),"/proj_ensembles/individual_projections/"),
+  ras <- raster(dir(glue("{spp_short}/proj_ensembles/individual_projections/"),
                     pattern = x, full.names = TRUE)[2])
   
   if (output == "pdf") {
     
-    pdf(paste0(str_replace(sppselect," ","."),"/ensemble_maps/",sppselect, "_",x,".pdf"), width = 12, height = 9)
+    pdf(glue("{spp_short}/ensemble_maps/{spp_short}_{x}.pdf"), width = 12, height = 9)
     plot(ras, main = str_c(sppselect," - ",x))
     dev.off()
     
@@ -23,7 +23,7 @@ EM_write_pdf <- function(x, output){
     
     p <- arrangeGrob(grobs = list(p), nrow = 1)
     ggsave(
-      glue("{str_replace(sppselect,' ','.')}/ensemble_maps/{str_replace(sppselect,' ','.')}_{x}.png"),
+      glue("{spp_short}/ensemble_maps/{spp_short}_{x}.png"),
       p,
       width = 16, height = 9)
     
