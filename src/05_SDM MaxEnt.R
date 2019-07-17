@@ -305,6 +305,8 @@ save(list = c("sb_list","sb_ran_folds",
               "eb_folds","foldtable"), 
      file = glue("data output/sdm data processing/{sppselect}/blockCV_data.RData"))
 
+print("SUCCESSFULLY COMPLETED")
+
 # Overlay urban landscape -------------------------------------------------
 
 ## LEAVE THIS OUT FOR NOW ##
