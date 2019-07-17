@@ -326,7 +326,12 @@ pdf(glue("data output/sdm data processing/{sppselect}/fig3.pdf"), width = 16, he
 map(plists, plotras)
 dev.off()
 
+# Write occurence points to shapefile -------------------------------------
+occ_points %>% 
+  st_write(glue("data output/sdm data processing/{sppselect}/occ_points_{sppselect}.shp"))
+
 # Write workspace ---------------------------------------------------------
 save(list = c("occ_points","bck_points","envstack"), 
      file = glue("data output/sdm data processing/{sppselect}/sdm_input_data.RData"))
 
+print("SUCCESSFULLY COMPLETED")
