@@ -28,6 +28,17 @@ load(glue("data output/sdm data processing/{sppselect}/blockCV_data.RData"))
 walk(dir("src/functions/", pattern = "EM_", full.names = TRUE),
     source)
 
+# Create a shorter name ---------------------------------------------------
+
+## It seems as if the long species name cause problems because the file names become so large
+## Take the first 2 letters of the genus and first 3 letters of the species.
+## It also means I can unzip the file in the correct directory!
+
+spp_short <- str_c(str_sub(word(sppselect,1),1,2),
+                   str_sub(word(sppselect,2),1,3))
+spp_short
+
+
 # :: BIOMOD_FormatingData -------------------------------------------------
 
 ## resp.var is made up of 1's (presence) and NA's (psuedo abs)
@@ -54,7 +65,7 @@ spp_resp_xy <- rbind(pres[,c("lon","lat")],
 biomod_data <- BIOMOD_FormatingData(
   resp.var = spp_resp,
   resp.xy = spp_resp_xy,
-  resp.name = sppselect,
+  resp.name = spp_short,
   expl.var = stack(envstack),
   # PA.nb.rep = 1, # Number of pseudo abs data sets
   # PA.strategy = "random", # Look at "user.defined" option
@@ -87,7 +98,7 @@ biomod_out <- BIOMOD_Modeling(
   models.eval.meth = c("TSS","ROC","KAPPA"), # Evaluation methods
   SaveObj = TRUE, 
   do.full.models = FALSE, # TRUE = models calibrated and evaluated with the whole dataset are done  
-  modeling.id = paste0("Ensemble_",sppselect)
+  modeling.id = paste0("Ensemble_",spp_short)
   )
 
 toc(log = TRUE)
@@ -97,7 +108,7 @@ tic.clearlog()
 glue("Biomod model running process took {runtime_biomod} minutes")
 
 # Diagnostic plot directory -----------------------------------------------
-dir.create(glue('{getwd()}/{str_replace(sppselect," ",".")}/diagnostics'))
+dir.create(glue('{getwd()}/{spp_short}/diagnostics'))
 
 # Model score plots -------------------------------------------------------
 model_scores_plot <- function(plotby,metric,mtitle,xlim,ylim){
@@ -120,18 +131,18 @@ plots_out2 <- pmap(list(plotby = plotbys, metric = metrics2,
                         mtitle = titles, xlim = xlims, ylim = ylims),
                    model_scores_plot)
 
-pdf(glue('{str_replace(sppselect," ",".")}/diagnostics/avg_model_scores1.pdf'), width = 9, height = 9)
+pdf(glue('{spp_short}/diagnostics/avg_model_scores1.pdf'), width = 9, height = 9)
 grid.arrange(grobs = plots_out1, ncol = 2,nrow = 2) # Also see ggarrange
 dev.off()
-pdf(glue('{str_replace(sppselect," ",".")}/diagnostics/avg_model_scores2.pdf'), width = 9, height = 9)
+pdf(glue('{spp_short}/diagnostics/avg_model_scores2.pdf'), width = 9, height = 9)
 grid.arrange(grobs = plots_out2, ncol = 2,nrow = 2) # Also see ggarrange
 dev.off()
 
 p <- arrangeGrob(grobs = plots_out1, ncol = 2,nrow = 2)
-ggsave(glue('{str_replace(sppselect," ",".")}/diagnostics/avg_model_scores1.png'), p, width = 9, height = 9)
+ggsave(glue('{spp_short}/diagnostics/avg_model_scores1.png'), p, width = 9, height = 9)
 
 p <- arrangeGrob(grobs = plots_out2, ncol = 2,nrow = 2)
-ggsave(glue('{str_replace(sppselect," ",".")}/diagnostics/avg_model_scores2.png'), p, width = 9, height = 9)
+ggsave(glue('{spp_short}/diagnostics/avg_model_scores2.png'), p, width = 9, height = 9)
 
 # Variable importance plots -----------------------------------------------
 biomod_var_import <- get_variables_importance(biomod_out)
@@ -149,8 +160,8 @@ var_import %>%
   facet_grid(cols = vars(algo))+
   theme(strip.text = element_text(size = 15),
         axis.text = element_text(size = 13))
-ggsave(glue('{str_replace(sppselect," ",".")}/diagnostics/variable_importance.pdf'), width = 16, height = 9)
-ggsave(glue('{str_replace(sppselect," ",".")}/diagnostics/variable_importance.png'), width = 16, height = 9)
+ggsave(glue('{spp_short}/diagnostics/variable_importance.pdf'), width = 16, height = 9)
+ggsave(glue('{spp_short}/diagnostics/variable_importance.png'), width = 16, height = 9)
 
 # Extract model evaluation measures ---------------------------------------
 biomod_eval <- get_evaluations(biomod_out) # an array,df or a list containing models eval scores
@@ -159,7 +170,7 @@ biomod_eval["ROC","Testing.data",,,]
 
 df <- as.data.frame.table(biomod_eval, responseName = "value") 
 write_csv(df, 
-          glue('{str_replace(sppselect," ",".")}/diagnostics/evaluation_metrics.csv'))
+          glue('{spp_short}/diagnostics/evaluation_metrics.csv'))
 
 # The "Testing.data" col is what is important in terms of TSS,ROC and KAPPA
 # No metrics evaluation data (need to go back and see where to specificy eval) - blockCV or BIOMOD_cv
@@ -172,7 +183,7 @@ modload1 <- BIOMOD_LoadModels(biomod_out, models = model_list[[1]])
 modload2 <- BIOMOD_LoadModels(biomod_out, models = model_list[[2]])
 modload3 <- BIOMOD_LoadModels(biomod_out, models = model_list[[3]])
 
-filenames <-  as.list(glue('{str_replace(sppselect," ",".")}/diagnostics/Response curve_{model_list[1:3]}'))
+filenames <-  as.list(glue('{spp_short}/diagnostics/Response curve_{model_list[1:3]}'))
 
 response_plot_list <- pmap(list(modloaded = list(modload1,modload2,modload3),
                                 x = list(biomod_out),
@@ -213,7 +224,7 @@ biomod_EM <- BIOMOD_EnsembleModeling(
   chosen.models = 'all', # Define which models are kept for EM (can remove some)
   em.by='all', # See options above
   eval.metric = c("TSS","ROC"), # See function help file for description
-  eval.metric.quality.threshold = c(0.7,0.7), # models with scores below threshold excluded from EM building
+  eval.metric.quality.threshold = c(0.65,0.65), # models with scores below threshold excluded from EM building
   models.eval.meth = c('KAPPA','TSS','ROC'),# Used to check ensemble predicitive performance
   prob.mean = TRUE, # Estimate the mean probabilities across predictions
   prob.cv = TRUE, # Coefficient of variation across predictions
@@ -246,7 +257,7 @@ rown <- rownames(em_vals[[1]])
 map_df(em_vals,unlist) %>% 
   mutate(measure = rep(coln,each = 3), stat = rep(rown, 4)) %>% 
   select(measure,stat, everything()) %>% 
-  write_csv(glue('{str_replace(sppselect," ",".")}/diagnostics/ensemble_models_evaluations.csv'))
+  write_csv(glue('{spp_short}/diagnostics/ensemble_models_evaluations.csv'))
 
 # Ensemble sample predictions ---------------------------------------------
 
@@ -257,7 +268,7 @@ dimnames(em_preds)[[2]][4]
 dim(em_preds)
 
 # Each EM is a column - eg:
-em_preds[1:10,glue("{str_replace(sppselect, ' ', '.')}_EMciInfByTSS_mergedAlgo_mergedRun_mergedData")] # lower CI
+em_preds[1:10,glue("{spp_short}_EMciInfByTSS_mergedAlgo_mergedRun_mergedData")] # lower CI
 
 # :: BIOMOD_Projection ----------------------------------------------------
 
@@ -284,7 +295,7 @@ plot(biomod_proj, str.grep = "MAXENT.Phillips")
 current_proj <- get_predictions(biomod_proj) # Returns raster stack
 class(current_proj);names(current_proj)
 
-pdf(paste0(str_replace(sppselect," ","."),"/diagnostics/current projection plots.pdf"))
+pdf(glue("{spp_short}/diagnostics/current projection plots.pdf"))
 par(mfrow = c(2,2))
 for(i in 1:length(names(current_proj))){
   plot(current_proj[[i]], main = names(current_proj)[[i]])
@@ -311,10 +322,10 @@ biomod_EF
 # Write EM predictive maps to folder --------------------------------------
 
 # Create a folder to store maps
-dir.create(paste0(getwd(),"/",str_replace(sppselect," ","."),"/ensemble_maps"))
+dir.create(glue("{getwd()}/{spp_short}/ensemble_maps"))
 
 # Get ensemble model names
-dir_em <-dir(paste0(str_replace(sppselect," ","."),"/proj_ensembles/individual_projections/"), 
+dir_em <-dir(glue("{spp_short}/proj_ensembles/individual_projections/"), 
              pattern = "gri",
              full.names = TRUE)
 
@@ -362,7 +373,7 @@ if (geo_proj == "Yes") {
   
 }
 
-pred_range <- raster(dir(paste0(str_replace(sppselect," ","."),"/proj_ensembles/individual_projections/"),
+pred_range <- raster(dir(glue("{spp_short}/proj_ensembles/individual_projections/"),
                   pattern = "EMmedianByROC", full.names = TRUE)[2])
 pred_range <- pred_range/1000
 rasex <- pred_range@extent
@@ -386,7 +397,7 @@ urb <- urb %>%
 urbspdf <- as(urb, "Spatial")
 rm(urblc)
 
-pdf(paste0(str_replace(sppselect," ","."),"/ensemble_maps/",sppselect, "_","EMmedianByROC_URB",".pdf"), width = 12, height = 9)
+pdf(glue("{spp_short}/ensemble_maps/{spp_short}_EMmedianByROC_URB.pdf"), width = 12, height = 9)
 mapTheme <- rasterTheme(region=rev(terrain.colors(10))) # brewer.pal(8,"Greens")
 plt <- levelplot(pred_range, margin=F, par.settings=mapTheme)
 plt + layer(sp.lines(as(za,"Spatial"),col="black", lwd=1)) +
@@ -396,8 +407,8 @@ dev.off()
 # Write workspace ---------------------------------------------------------
 save(list = c("occ_points","bck_points","envstack","PB_data","eb","block_data",
               "biomod_data","biomod_EF","biomod_EM","biomod_eval","biomod_options",
-              "biomod_out","biomod_proj","biomod_var_import","response_plot_list"), 
-     file = glue("{getwd()}/{str_replace(sppselect,' ','.')}/biomod objects.RData"))
+              "biomod_out","biomod_proj","biomod_var_import","response_plot_list", "spp_short"), 
+     file = glue("{getwd()}/{spp_short}/biomod objects.RData"))
 
 # Move entire folder to data output directory -----------------------------
 ensem_dir <- glue("data output/sdm ensemble results/")
@@ -419,18 +430,18 @@ if(dir.exists(ensem_spp_dir)) {
 # TODO - write a function for all of this file copying
 
 ## Copy relevant outputs
-copyfrom <- glue("{str_replace(sppselect,' ','.')}/diagnostics/")
+copyfrom <- glue("{spp_short}/diagnostics/")
 file.copy(copyfrom, ensem_spp_dir, recursive=TRUE)
 
-copyfrom <- glue("{str_replace(sppselect,' ','.')}/ensemble_maps/")
+copyfrom <- glue("{spp_short}/ensemble_maps/")
 file.copy(copyfrom, ensem_spp_dir, recursive=TRUE)
 
-copyfrom <- glue("{str_replace(sppselect,' ','.')}/biomod objects.RData")
+copyfrom <- glue("{spp_short}/biomod objects.RData")
 file.copy(copyfrom, ensem_spp_dir, recursive=TRUE)
 
 ## Zip folder (to store all outputs)
 zip::zipr(zipfile = glue("{sppselect}.zip"), 
-         files=glue("{getwd()}/{str_replace(sppselect,' ','.')}"))
+         files=glue("{getwd()}/{spp_short}"))
 
 ## Move files
 copyfrom <- glue("{getwd()}/{sppselect}.zip")
@@ -438,10 +449,12 @@ file.copy(copyfrom, ensem_dir, recursive=TRUE)
 
 ## Delete originals
 unlink(glue("{getwd()}/{sppselect}.zip"), recursive = TRUE) 
-unlink(glue("{getwd()}/{str_replace(sppselect,' ','.')}"), recursive = TRUE)
+unlink(glue("{getwd()}/{spp_short}"), recursive = TRUE)
 
-## Unzip folder - FREAKING DIRECTORIES ARE TOO LONG.
+## Unzip folder - This should work now that I've shortened directories
 # zip::unzip(zipfile = glue("{getwd()}/{ensem_dir}{sppselect}.zip"),
 #            exdir = ensem_dir)
+
+print("SUCCESSFULLY COMPLETED")
 
 # END ---------------------------------------------------------------------
