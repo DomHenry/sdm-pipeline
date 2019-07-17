@@ -69,18 +69,30 @@ if (ncells < 5000) {
   
 }
 
+if(sac_samp < 1000){
+  sample_number <- sac_samp
+} else {
+  sample_number <- sac_samp - 500
+}
+
 sac_samp
+sample_number
+
+## Custom if neccessary
+# sample_number <- sample_number-1000
 
 # Explore spatial autocorrelation range -----------------------------------
 sac <- spatialAutoRange(
   rasterLayer = envstack,
-  sampleNumber = sac_samp - 500, # number of cells to be used - throws an error 
+  sampleNumber = sample_number,  
   doParallel = TRUE,
   nCores = NULL, # use half of the CPU cores
   plotVariograms = FALSE,
   showPlots = FALSE,
   progress = TRUE
   )
+
+# The function often fails with error; task 1 failed - "cannot take a sample larger than the population when 'replace = FALSE'" -> if sampleNumber is decreased then it works but the amount of the decrease seems arbitary
 
 # Write SAC plots and summaries -------------------------------------------
 sac[["plots"]]$barchart
@@ -308,6 +320,8 @@ save(list = c("occ_points","bck_points","envstack",
               "eb","bf","sac","sb_list",
               "PB_data"), 
      file = glue("data output/sdm data processing/{sppselect}/sdm_input_data.RData"))
+
+print("SUCCESSFULLY COMPLETED")
 
 # Future developments -----------------------------------------------------
 
