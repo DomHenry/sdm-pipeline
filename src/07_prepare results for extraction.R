@@ -35,6 +35,8 @@ query <- read_xlsx("data input/SDM_query.xlsx") %>%
   print
 
 sppselect <- query$Value[which(query$Input == "Species")]
+spp_short <- str_c(str_sub(word(sppselect,1),1,2),
+                   str_sub(word(sppselect,2),1,3))
 
 dir.create(glue("data output/rmarkdown documents"))
 
@@ -96,9 +98,9 @@ file.copy(copyfrom,rmark_dir, recursive=TRUE)
 ## TODO Perhaps write a query to extract specific maps?
 
 copyfrom <- c(
-    glue("data output/sdm ensemble results/{sppselect}/ensemble_maps/{str_replace(sppselect, ' ', '.')}_EMcvByROC.png"),
-    glue("data output/sdm ensemble results/{sppselect}/ensemble_maps/{str_replace(sppselect, ' ', '.')}_EMmeanByROC.png"),
-    glue("data output/sdm ensemble results/{sppselect}/ensemble_maps/{str_replace(sppselect, ' ', '.')}_EMcaByROC.png")
+    glue("data output/sdm ensemble results/{sppselect}/ensemble_maps/{spp_short}_EMcvByROC.png"),
+    glue("data output/sdm ensemble results/{sppselect}/ensemble_maps/{spp_short}_EMmeanByROC.png"),
+    glue("data output/sdm ensemble results/{sppselect}/ensemble_maps/{spp_short}_EMcaByROC.png")
 )
 
 file.copy(copyfrom,rmark_dir, recursive=TRUE)
@@ -115,3 +117,5 @@ file.copy(copyfrom,rmark_dir, recursive=TRUE)
 foldtable$fold_dir
 copyfrom <- glue("data output/sdm data processing/{sppselect}/blockCV_results/tt_plots_{foldtable$fold_dir}.png")
 file.copy(copyfrom,rmark_dir, recursive=TRUE)
+
+print("SUCCESSFULLY COMPLETED")
