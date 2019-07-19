@@ -44,10 +44,16 @@ foldtable <- dir(glue("data output/sdm data processing/{sppselect}/blockCV_resul
   map(read_csv) %>% 
   map_df(bind_rows) %>% 
   filter(type != "Buffer") # Remove buffer folds for now
-  
+
+if (max(foldtable$testPr) < 11){
+  testpr_thresh <- max(foldtable$testPr) - 3
+} else {
+  testpr_thresh <-  10
+}
+
 # Filter folds which have insufficient testPr values
 foldtable <- foldtable %>% 
-  filter(testPr > 10) %>% 
+  filter(testPr > testpr_thresh) %>% 
   mutate(assignment = ifelse(is.na(assignment),"environ", assignment)) %>% 
   mutate(fold_dir = str_c(assignment,"_",foldID)) %>% 
   print(n = 20)
@@ -140,7 +146,7 @@ fold_dir <- folder_dir
 # Yay! It works...
 maxlist <- pmap(
   .l = list(fold_data, fold_ref, fold_name, fold_num, fold_dir),
-  .f = maxent_fold
+  .f = safely(maxent_fold)
   )
 
 # test <- 1
@@ -150,6 +156,10 @@ maxlist <- pmap(
 # fold_num <- fold_num[[test]]
 # fold_dir <- folder_dir[[test]]
 
+# If a function was run safely then I need to extract the "result" part of the list
+maxlist <- maxlist %>% 
+  map("result")
+  
 # Testing the model -------------------------------------------------------
 eval_list <- pmap(.l = list(fold_data, fold_ref, fold_name, fold_num, maxlist),
                   .f = maxent_eval_models
