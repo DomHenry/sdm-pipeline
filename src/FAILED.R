@@ -38,11 +38,48 @@
 # Breviceps branchi -------------------------------------------------------
 # NOT RUNNING - only one valid data point at this stage
 
-
-
 # Breviceps gibbosus ------------------------------------------------------
 
 # FAILED AT ENSEMBLE STAGE! Models are exhibiting really poor fit (so need to manually adjust the eval.metric.quality.threshold to a lower value so that some models are actually included in the output!
 
+# Breviceps sylvestris ----------------------------------------------------
+
+# Failed at maxent code maxent_fold() - failed on the environ_fold3 data set  - can't continue - need to trouble shoot this # Warning: Skipping species because it has 0 test samples
+# Error in file(con, "r") : cannot open the connection
+# In addition: Warning message:
+#   In file(con, "r") :
+#   cannot open file 'data output/sdm maxent results/Breviceps sylvestris/environ_fold3/species.lambdas': No such file or directory
 
 
+# Cacosternum capense -------------------------------------------------
+
+# Failed at the BIOMOD_EnsembleModeling() step
+# Error in readChar(con, 5L, useBytes = TRUE) : cannot open the connection
+# In addition: Warning message:
+#   In readChar(con, 5L, useBytes = TRUE) :
+#   cannot open compressed file 'Cacap/.BIOMOD_DATA/Ensemble_Cacap/formated.input.data', probable reason 'No such file or director
+
+
+# Cacosternum platys ------------------------------------------------------
+
+## ERROR 1
+# Failed at the BIOMOD_EnsembleModeling() step - 
+
+# Median of ptobabilities...
+# Evaluating Model stuff...Non finite obs or fit available 
+# Error in names(models.kept.tresh) <- models.kept : 
+  # attempt to set an attribute on NULL
+
+# The FIX was too manually adjust the eval.metric.quality.threshold to a lower value so that some models are actually included in the output 
+
+# I've used try() to run models again with lower thresholds if there is an error in the first function.
+
+## ERROR 2
+
+# Failed at RMarkdown step because this species was not listed in the "data output/occurence record dates/occ_records_date_summary.csv" file ---> NEED TO GO BACK AND CHECK WHY THIS IS THE CASE.
+
+
+
+# ALL other cacosternum species -------------------------------------------
+
+# Need to go back and find out why they are not showing up in the occ_records_date file and why some of the decade inset maps are missing - This could be due to no valid date information for any records.
