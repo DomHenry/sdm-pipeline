@@ -219,7 +219,7 @@ get_evaluations(biomod_out)
 # :: BIOMOD_EnsembleModeling ----------------------------------------------
 
 ## Note - this function throws an error if working directory for models is with "data output" folder. It is strange and I have no idea what causes this - the problem is that some files won't copy once I try move the whole results folder to a directory within "sdm em results".
-biomod_EM <- BIOMOD_EnsembleModeling(
+biomod_EM <- try(BIOMOD_EnsembleModeling(
   modeling.output = biomod_out,
   chosen.models = 'all', # Define which models are kept for EM (can remove some)
   em.by='all', # See options above
@@ -235,7 +235,37 @@ biomod_EM <- BIOMOD_EnsembleModeling(
   prob.mean.weight = TRUE, # Estimate the weighted sum of probabilities
   prob.mean.weight.decay = 'proportional',
   VarImport = 0 # Number of permutation to estimate variable importance
-  ) 
+  )) 
+
+biomod_EM
+
+# Need to re-run if the model quality thresholds are too high (i.e. function throws error)
+# Alternative method would be to use tryCatch()
+
+if(class(biomod_EM) == "try-error"){
+  
+  biomod_EM <- BIOMOD_EnsembleModeling(
+    modeling.output = biomod_out,
+    chosen.models = 'all', # Define which models are kept for EM (can remove some)
+    em.by='all', # See options above
+    eval.metric = c("TSS","ROC"), # See function help file for description
+    eval.metric.quality.threshold = c(0.3,0.3), # models with scores below threshold excluded from EM building
+    models.eval.meth = c('KAPPA','TSS','ROC'),# Used to check ensemble predicitive performance
+    prob.mean = TRUE, # Estimate the mean probabilities across predictions
+    prob.cv = TRUE, # Coefficient of variation across predictions
+    prob.ci = TRUE, # Estimate the confidence interval around the prob.mean
+    prob.ci.alpha = 0.05,
+    prob.median = TRUE,
+    committee.averaging = TRUE, # Estimate the committee averaging across predictions
+    prob.mean.weight = TRUE, # Estimate the weighted sum of probabilities
+    prob.mean.weight.decay = 'proportional',
+    VarImport = 0 # Number of permutation to estimate variable importance
+  )
+} else {
+    
+  biomod_EM <- biomod_EM
+  
+  }
 
 # prob.mean.weight.decay argument: 
 # Define the relative importance of the weights. A high value will strongly discriminate the 'good' models from the 'bad' ones (see the details section). If the value of this parameter is set to 'proportional' (default), then the attributed weights are proportional to the evaluation scores given by 'weight.method'(eval.metric)
