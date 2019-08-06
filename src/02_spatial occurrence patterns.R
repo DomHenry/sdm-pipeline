@@ -20,15 +20,8 @@ load("data output/amph_data_clean.RData")
 map(dir("src/functions/",full.names = TRUE),
     source)
 
-sa <- st_read("data input/PR_SA.shp") # sa <- st_read("data input/southern_africa.shp")
-sa_merge <- sa %>% # Merge provinces
-  st_union()
-
-sa %>% 
-  group_by(PR_NAME) %>% 
-  summarise() %>% 
-  ggplot(aes(col = PR_NAME))+
-  geom_sf()
+latlongCRS <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+za <- st_read("data input/PR_SA.shp",crs = latlongCRS)
 
 # Remove species with no data from species RL vector ----------------------
 spp <- spp[spp %in% unique(amph$scientificname)]
