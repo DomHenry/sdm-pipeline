@@ -35,7 +35,7 @@ load(glue("data output/sdm data processing/{sppselect}/sdm_input_data.RData"))
 # Create PB object for blockCV functions ----------------------------------
 PB_data <- occ_points %>% 
   ungroup %>% 
-  mutate(Species = 1) %>% 
+  mutate(Species = 1) %>%
   select(Species) %>% 
   rbind(bck_points %>% 
           ungroup %>% 
@@ -81,10 +81,24 @@ sample_number
 ## Custom if neccessary
 # sample_number <- sample_number-1000
 
+ncells
+sample_number # 4959
+
+# RSA border --------------------------------------------------------------
+latlongCRS <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+za <- st_read("data input/PR_SA.shp",crs = latlongCRS)
+plot(za)
+
+plot(envstack[[1]])
+plot(as(za,"Spatial"), add = TRUE)
+plot(as(occ_points,"Spatial"), add = TRUE, pch = 21)
+
 # Explore spatial autocorrelation range -----------------------------------
 sac <- spatialAutoRange(
   rasterLayer = envstack,
-  sampleNumber = sample_number,  
+  sampleNumber = sample_number,
+  # speciesData = as(occ_points,'Spatial'), # THIS IS THE ALTERNATIVE ARGUMENT (to sampleNumber)
+  # border = as(za,"Spatial"), # this doesn't seem to help anything.
   doParallel = TRUE,
   nCores = NULL, # use half of the CPU cores
   plotVariograms = FALSE,
@@ -92,7 +106,41 @@ sac <- spatialAutoRange(
   progress = TRUE
   )
 
+
 # The function often fails with error; task 1 failed - "cannot take a sample larger than the population when 'replace = FALSE'" -> if sampleNumber is decreased then it works but the amount of the decrease seems arbitary
+
+# speciesData:: If provided, the sampleNumber is ignored and variograms are created based on species locations.
+
+
+# FAILED
+# Arthroleptella drewesii
+# ncell(envstack) = 132
+# sampleNumber = between 111 & 132 
+
+# RAN
+# ncell(envstack) = 132
+# sampleNumber <= 110 
+110/132
+
+# FAILED
+# Arthroleptella landdrosia
+# ncell(envstack) = 342
+# sampleNumber = between 319 & 342
+
+# RAN
+# ncell(envstack) = 342
+# sampleNumber <= 318 
+318/342
+
+# FAILED
+# Breviceps bagginsi
+# ncell(envstack) = 4959
+# sampleNumber = between 3368 & 4959
+
+# RAN
+# ncell(envstack) = 4959
+# sampleNumber <= 3367
+3367/4959
 
 # Write SAC plots and summaries -------------------------------------------
 sac[["plots"]]$barchart
@@ -266,6 +314,22 @@ pwalk(.l = list(block_data, fold_name, fold_num, list(sb_id[[3]]), endcol, plot_
 # If rasterBlock = TRUE , the clustering is done in the raster space. In this approach the clusters will be consistent throughout the region and across species (in the same region). However, this may result in a cluster(s) that covers none of the species records, especially when species data is not dispersed throughout the region or the number of clusters (k or folds) is high. In this case, the number of folds is less than specified k
 
 # Therefore we should use rasterBlock = FALSE for species with few points that are clustered throughout study region
+
+## Check - do points fall outside raster?
+plot(envstack[[1]])
+points(as(PB_data, 'Spatial'))
+sppselect
+
+ex_pb <- extent(PB_data)
+ex_env <- extent(envstack) # This is confirmed
+
+ex_pb@xmin > ex_env@xmin # FALSE = error
+ex_pb@ymin > ex_env@ymin # FALSE = error
+
+ex_pb@xmax < ex_env@xmax # FALSE = error
+ex_pb@ymax < ex_env@ymax # FALSE = error
+##
+
 rb_choice <- FALSE
 
 eb <- envBlock(
