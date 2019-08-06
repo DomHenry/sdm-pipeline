@@ -33,7 +33,7 @@ load("data output/amph_data_clean.RData")
 # Filter occurence data based on query ------------------------------------
 
 ## Species and time frame
-occ_data <- amph %>% 
+occ_data <- amphsf %>% 
   filter(scientificname == query$Value[which(query$Input == "Species")]) %>% 
   filter(year >= query$Value[which(query$Input == "Start year")]) %>% 
   filter(year <= query$Value[which(query$Input == "End year")])
@@ -58,63 +58,19 @@ if(dateval == "Complete"){
   
 }
 
+# Spatial projections  ----------------------------------------------------
 geo_proj <- query$Value[which(query$Input == "Geographic projection")]
-
-## Spatial quality 
 aeaproj <- "+proj=aea +lat_1=20 +lat_2=-23 +lat_0=0 +lon_0=25 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
 latlongCRS <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
 
 if (geo_proj == "Yes") {
-    za <- st_read("data input/PR_SA.shp",crs = latlongCRS) %>% 
-    st_transform(aeaproj) 
+  occ_points <- occ_data %>% 
+    st_as_sf(coords = c("decimallongitude","decimallatitude"),crs = latlongCRS) %>% 
+    st_transform(aeaproj)
 } else {
-    za <- st_read("data input/PR_SA.shp",crs = latlongCRS)
-}
-
-spatval <- query$Value[which(query$Input == "Spatial accuracy")]
-
-if(spatval == "High"){
-
-  ## Records with no location errors, not QDS scale, and are within SA shapefile (12 obs fall outside)
   occ_points <- occ_data %>% 
-    filter(!(is.na(decimallatitude) | is.na(decimallongitude) | 
-               decimallatitude == 0 | decimallongitude == 0 |
-               decimallatitude > -15 | decimallatitude < -35 |
-               decimallongitude < 15 | decimallongitude > 35)) %>% 
-    filter(qds == 0) %>%
-    filter(!coordinateprecision %in% "Nearest Quarter Degree") %>% 
-    st_as_sf(coords = c("decimallongitude","decimallatitude"), crs = latlongCRS) 
-  
-  if (geo_proj == "Yes") {
-    occ_points <- occ_points %>% 
-      st_transform(aeaproj) %>% 
-      st_intersection(st_buffer(za,1000)) # 1000m = 1km
-  } else {
-     occ_points <- occ_points %>% 
-       st_intersection(st_buffer(za,0.01)) # 0.01 arc_degree ~ 1km
+    st_as_sf(coords = c("decimallongitude","decimallatitude"),crs = latlongCRS)
   }
-    
-  
-} else if (spatval == "Low"){
-  
-  ## Records with no location errors and are within SA shapefile (include QDS)
-  occ_points <- occ_data %>% 
-    filter(!(is.na(decimallatitude) | is.na(decimallongitude) | 
-               decimallatitude == 0 | decimallongitude == 0 |
-               decimallatitude > -15 | decimallatitude < -35 |
-               decimallongitude < 15 | decimallongitude > 35)) %>% 
-    st_as_sf(coords = c("decimallongitude","decimallatitude"),crs = latlongCRS) 
-  
-  if (geo_proj == "Yes") {
-    occ_points <- occ_points %>% 
-      st_transform(aeaproj) %>% 
-      st_intersection(st_buffer(za,1000)) # 1000m = 1km
-  } else {
-    occ_points <- occ_points %>% 
-      st_intersection(st_buffer(za,0.01)) # 0.01 arc_degree ~ 1km
-  }
-  
-}
 
 # Remove duplicate coordinate values
 occ_points <- occ_points %>% 
@@ -125,6 +81,9 @@ occ_points <- occ_points %>%
 ## Extract buffer value from query
 buffval <- as.numeric(query$Value[which(query$Input == "Background buffer (km)")])*1000
 buff_latlong <- as.numeric(query$Value[which(query$Input == "Background buffer (km)")])/100 # Divide km by 100 to convert to arc_degree
+
+latlongCRS <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+za <- st_read("data input/PR_SA.shp",crs = latlongCRS)
 
 if (geo_proj == "Yes") {
   # Create buffer around occ points, create single polygon and intersect with SA border
@@ -257,6 +216,25 @@ envstack <- stack(map(envlayers,extractfiles))
 names(envstack)[which(str_detect(names(envstack),"current_2.5arcmin"))] <- str_replace(names(envstack)[which(str_detect(names(envstack),"current_2.5arcmin"))],"current_2.5arcmin_","")
 names(envstack)
 
+# Mask envstack raster ----------------------------------------------------
+
+# This function makes sure that only cells that are defined across ALL raster layers are kept in the raster stack (if this isn't done then errors occur in the BIOMOD_projection step).
+
+# I think this is more important when the rasters and other spatial data are projected.
+
+## Function to define the intersect of rasters
+intersect_mask <- function(x){
+  values_x <- getValues(x)
+  inter_x <- values_x %*% rep(1,nlayers(x))
+  mask <- setValues(subset(x,1),values = (inter_x>0))
+  return(mask)
+}
+
+## Keep only all cells that are defined for all layers
+envstack <- stack(mask(envstack, intersect_mask(envstack)))
+
+# Project rasters ---------------------------------------------------------
+
 ## Project the rasters to AEA and crop (20% buffer added) to occurence buffer
 projenv_aea <- function(x){
   projection(x) <- latlongCRS
@@ -270,19 +248,11 @@ projenv_latlong <- function(x){
 
 if (geo_proj == "Yes") {
   envstack <- stack(map(envstack@layers,projenv_aea)) %>% 
-    crop(extent(bck_points)*1.05) # Add a 5% buffer
+    crop(extent(bck_points)*1.10) # Add a 10% buffer
 } else {
   envstack <- stack(map(envstack@layers,projenv_latlong)) %>% 
-    crop(extent(bck_points)*1.05)
+    crop(extent(bck_points)*1.10)
   }
-
-# if (geo_proj == "Yes") {
-#   envstack <- stack(map(envstack@layers,projenv)) %>% 
-#     crop(extent(bck_points)*1.2)  
-# } else {
-#   envstack <- crop(envstack, extent(bck_points)*1.2)  
-# }
-
 
 ## ****
 ## It may be good to scale and center environmental rasters before including them in the models
@@ -328,7 +298,8 @@ dev.off()
 
 # Write occurence points to shapefile -------------------------------------
 occ_points %>% 
-  st_write(glue("data output/sdm data processing/{sppselect}/occ_points_{sppselect}.shp"))
+  st_write(glue("data output/sdm data processing/{sppselect}/occ_points_{sppselect}.shp"),
+           delete_dsn=TRUE)
 
 # Write workspace ---------------------------------------------------------
 save(list = c("occ_points","bck_points","envstack"), 
