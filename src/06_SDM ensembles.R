@@ -74,6 +74,24 @@ biomod_data <- BIOMOD_FormatingData(
 biomod_data
 plot(biomod_data)
 
+
+# Mask envstack raster ----------------------------------------------------
+
+# This function makes sure that only cells that are defined across ALL raster layers are kept in the raster stack (if this isn't done then errors occur in the BIOMOD_projection step).
+
+# I think this is more important when the rasters and other spatial data are projected.
+
+## Function to define the intersect of rasters
+intersect_mask <- function(x){
+  values_x <- getValues(x)
+  inter_x <- values_x %*% rep(1,nlayers(x))
+  mask <- setValues(subset(x,1),values = (inter_x>0))
+  return(mask)
+}
+
+## Keep only all cells that are defined for all layers
+envstack <- stack(mask(envstack, intersect_mask(envstack)))
+
 # Define biomod modelling options -----------------------------------------
 biomod_options <- BIOMOD_ModelingOptions(MAXENT.Phillips = list(path_to_maxent.jar = "C:/Users/DominicH/Documents/R/win-library/3.6/dismo/java"))
 
