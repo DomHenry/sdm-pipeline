@@ -150,9 +150,7 @@ amph %>%
   coord_cartesian(ylim = c(0,800))
 ggsave("data output/temporal occurrence plots/Sclerophrys pantherinus.pdf", width = 16, height = 9)
 
-
 # Plot :: Single species PNGs --------------------------------------------
-
 pmap(list(list(amph),spp_len,list(ymd("1940-01-01"))),
      safely(occ_date_high_plot_single))
 
