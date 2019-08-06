@@ -149,7 +149,7 @@ maxlist <- pmap(
   .f = safely(maxent_fold)
   )
 
-# test <- 1
+# test <- 2
 # fold_data <- fold_data[[test]]
 # fold_ref <- fold_ref[[test]]
 # fold_name <- fold_name[[test]]
