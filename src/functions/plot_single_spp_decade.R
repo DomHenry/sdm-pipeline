@@ -2,7 +2,7 @@
 
 plot_single_spp_decade <- function(x){
   ggplot()+
-    geom_sf(data = sa,fill = alpha("grey",0.5))+
+    geom_sf(data = za,fill = alpha("grey",0.5))+
     geom_sf(data =  amphsf %>% filter(scientificname %in% spp[x]),
             aes(color = decade,fill = decade))+
     scale_color_viridis_d(guide = FALSE)+

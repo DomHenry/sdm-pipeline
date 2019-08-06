@@ -29,7 +29,7 @@ maxent_fold <- function(fold_data, fold_ref, fold_name, fold_num, fold_dir) {
       select(x, y),
     removeDuplicates=TRUE, 
     path = fold_dir, 
-    args = c("randomtestpoints=30", "betamultiplier=1", 
+    args = c("randomtestpoints=0", "betamultiplier=1", 
              "linear=true", # need to see if there is a way to specify test and train data sets in args 
              "quadratic=true", "product=true", "threshold=true", 
              "hinge=true", "threads=2", "responsecurves=true", 

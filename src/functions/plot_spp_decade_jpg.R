@@ -1,7 +1,7 @@
 # Plot JPEG of occ points for each species per decade ---------------------
 plot_spp_decade_jpg <- function(x){
   ggplot()+
-    geom_sf(data = sa_merge,fill = alpha("grey",0.5))+
+    geom_sf(data = za,fill = alpha("grey",0.5))+
     geom_sf(data =  amphsf %>% filter(scientificname %in% x),
             aes(col = decade),
             size = 1.8,pch = 16)+

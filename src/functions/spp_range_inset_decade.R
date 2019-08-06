@@ -18,7 +18,7 @@ spp_range_inset_decade <- function(x,output) {
                     plot.title = element_text(size = 18))
     
     p1 <- ggplot() +
-      geom_sf(data = sa, fill = alpha("grey",0.3), size = 0.5)+
+      geom_sf(data = za, fill = alpha("grey",0.3), size = 0.5)+
       geom_sf(data = sppdata, size = 1.5, col = "black")+
       geom_sf(data = occ_bbox, fill = NA, col = "dodgerblue", size = 1.3) +
       theme_bw()+
@@ -28,7 +28,6 @@ spp_range_inset_decade <- function(x,output) {
     
     
     p2 <- ggplot()+
-      geom_sf(data = sa,fill = alpha("grey",0.3))+
       geom_sf(data =  sppdata, aes(color = decade,fill = decade), size = 3)+
       scale_color_viridis_d(guide = FALSE)+
       scale_fill_viridis_d()+
