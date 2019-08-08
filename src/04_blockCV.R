@@ -69,36 +69,11 @@ if (ncells < 5000) {
   
 }
 
-if(sac_samp < 1000){
-  sample_number <- sac_samp
-} else {
-  sample_number <- sac_samp - 500
-}
-
-sac_samp
-sample_number
-
-## Custom if neccessary
-# sample_number <- sample_number-1000
-
-ncells
-sample_number # 4959
-
-# RSA border --------------------------------------------------------------
-latlongCRS <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-za <- st_read("data input/PR_SA.shp",crs = latlongCRS)
-plot(za)
-
-plot(envstack[[1]])
-plot(as(za,"Spatial"), add = TRUE)
-plot(as(occ_points,"Spatial"), add = TRUE, pch = 21)
-
 # Explore spatial autocorrelation range -----------------------------------
 sac <- spatialAutoRange(
   rasterLayer = envstack,
-  sampleNumber = sample_number,
+  sampleNumber = sac_samp,
   # speciesData = as(occ_points,'Spatial'), # THIS IS THE ALTERNATIVE ARGUMENT (to sampleNumber)
-  # border = as(za,"Spatial"), # this doesn't seem to help anything.
   doParallel = TRUE,
   nCores = NULL, # use half of the CPU cores
   plotVariograms = FALSE,
@@ -106,46 +81,12 @@ sac <- spatialAutoRange(
   progress = TRUE
   )
 
-
-# The function often fails with error; task 1 failed - "cannot take a sample larger than the population when 'replace = FALSE'" -> if sampleNumber is decreased then it works but the amount of the decrease seems arbitary
-
-# speciesData:: If provided, the sampleNumber is ignored and variograms are created based on species locations.
-
-
-# FAILED
-# Arthroleptella drewesii
-# ncell(envstack) = 132
-# sampleNumber = between 111 & 132 
-
-# RAN
-# ncell(envstack) = 132
-# sampleNumber <= 110 
-110/132
-
-# FAILED
-# Arthroleptella landdrosia
-# ncell(envstack) = 342
-# sampleNumber = between 319 & 342
-
-# RAN
-# ncell(envstack) = 342
-# sampleNumber <= 318 
-318/342
-
-# FAILED
-# Breviceps bagginsi
-# ncell(envstack) = 4959
-# sampleNumber = between 3368 & 4959
-
-# RAN
-# ncell(envstack) = 4959
-# sampleNumber <= 3367
-3367/4959
-
 # Write SAC plots and summaries -------------------------------------------
 sac[["plots"]]$barchart
 ggsave(glue("{block_dir}/sac_barchart.pdf"))
 ggsave(glue("{block_dir}/sac_barchart.png"))
+dev.off()
+
 sac[["plots"]]$mapplot
 ggsave(glue("{block_dir}/sac_map.pdf"))
 ggsave(glue("{block_dir}/sac_map.png"))
@@ -378,6 +319,16 @@ bf[["records"]] %>%
          foldID = str_c("fold",1:nrow(bf[["records"]]))) %>% 
   select(foldID,type, everything()) %>% 
   write_csv(glue("data output/sdm data processing/{sppselect}/blockCV_results/bf_fold_table.csv"))
+
+
+# Write a combined fold table ---------------------------------------------
+filelist <- dir(glue("data output/sdm data processing/{sppselect}/blockCV_results"),
+             pattern = "fold_table", full.names = TRUE)
+  
+map(filelist[-which(str_detect(filelist,"bf_fold"))],
+    read_csv) %>% 
+  bind_rows() %>% 
+  write_csv(glue("data output/sdm data processing/{sppselect}/blockCV_results/combined_fold_table.csv"))
 
 # Write workspace ---------------------------------------------------------
 save(list = c("occ_points","bck_points","envstack",
